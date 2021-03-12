@@ -15,4 +15,5 @@ Future work will add the ability to use an SSH key file.
 
 ### Output
 `msg.payload <string>` = The text printed to STDOUT on the remote shell
+
 `msg.host` = The IP address of the connected host. This is also returned on errors so can be used in conjunction with the Catch node so only one Catch node is needed to watch all uses of the Interactive SSH node.
