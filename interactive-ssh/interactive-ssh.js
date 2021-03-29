@@ -139,6 +139,7 @@ module.exports = function(RED) {
         });
 
         node.on('close', function (done) {
+            clearTimeout(retryTimeoutID)
             node.stream.removeAllListeners();
             node.stream.end('bye\r\n');
             conn.removeAllListeners();
