@@ -28,7 +28,7 @@ module.exports = function(RED) {
         const ssh_config = {
             host: config.host,
             port: config.port,
-            keepaliveInterval: 5000,
+            // keepaliveInterval: 5000,
             username: config.username,
             password: config.pass // or provide a privateKey
         };
