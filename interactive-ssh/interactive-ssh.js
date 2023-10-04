@@ -32,7 +32,9 @@ module.exports = function(RED) {
             port: config.port,
             // keepaliveInterval: 5000,
             username: config.username,
-            password: config.pass // or provide a privateKey
+            password: config.pass, // or provide a privateKey
+            last: "",
+            save: {}
         };
         
         const allowKeepOpen = config.keepOpen;
@@ -65,19 +67,19 @@ module.exports = function(RED) {
                 stream.on('close', function() {
                     node.status({ fill: 'red', shape: 'ring', text: 'disconnected' });
                     if (debug) console.log('Stream :: close');
-                    node.send({ host: ssh_config.host, status: 'close disconnect' });
+                    node.send({ host: ssh_config.host, status: 'close disconnect', last: ssh_config.last, save: ssh_config.save });
                     // conn.end();
                 }).on('error', function(error) {
                     if (debug) console.log('Stream :: error');
                     node.status({ fill: 'red', shape: 'ring', text: 'error' });
-                    node.error("ERRSTREAM", {errMsg: error, host: ssh_config.host});
+                    node.error("ERRSTREAM", {errMsg: error, host: ssh_config.host, last: ssh_config.last, save: ssh_config.save});
                     // conn.end();
                 }).on('data', function(data) {
                     node.status({ fill: 'green', shape: 'dot', text: 'connected'});
-                    node.send({ host: ssh_config.host, payload: data });
+                    node.send({ host: ssh_config.host, payload: data, last: ssh_config.last, save: ssh_config.save });
                 }).stderr.on('data', function(data) {
                     node.status({ fill: 'green', shape: 'dot', text: 'connected'});
-                    node.send({ host: ssh_config.host, payload: data, "stderr": true });
+                    node.send({ host: ssh_config.host, payload: data, last: ssh_config.last, save: ssh_config.save, "stderr": true });
                 });
 
             });
@@ -117,7 +119,7 @@ module.exports = function(RED) {
 
         node.on('input', function (msg) {
             const data = msg.payload;
-
+            const save = msg.save;
 
             if (data) {
                 if (data.connect == true) {
@@ -150,6 +152,8 @@ module.exports = function(RED) {
                     try {
                         if (node.stream.writable) {
                             node.stream.write(data);
+                            ssh_config.last = data;
+                            ssh_config.save = save;
                         } else {
                             console.log("Stream not currently writable. Try again.")
                             node.error("Stream not currently writable. Try again.",{errmsg: "Stream not currently writable. Try again."})
