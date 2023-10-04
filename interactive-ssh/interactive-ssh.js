@@ -1,6 +1,8 @@
 module.exports = function(RED) {
     'use strict';
 
+    var host = "";
+
     // Helper function to attempt connection
     function connect(ssh_client, config) {
         // console.log(`SSH connecting to ${config.username}@${config.host}:${config.port.toString()} with password ${config.pass}`);
@@ -49,18 +51,21 @@ module.exports = function(RED) {
             node.status({ fill: 'green', shape: 'dot', text: 'connected'});
 
             conn.shell(function(err, stream) {
-                if (err) {
+                if (err) { 
                     node.error("ERRSHELL", {errMsg: err});
                     conn.end();
+                    node.send({ host: ssh_config.host, status: 'error disconnect' });
                 }
 
                 if (debug) console.log('Shell opened');
-                
+                node.send({ host: ssh_config.host, status: 'connected' });
+
                 node.stream = stream
 
                 stream.on('close', function() {
                     node.status({ fill: 'red', shape: 'ring', text: 'disconnected' });
                     if (debug) console.log('Stream :: close');
+                    node.send({ host: ssh_config.host, status: 'close disconnect' });
                     // conn.end();
                 }).on('error', function(error) {
                     if (debug) console.log('Stream :: error');
@@ -112,6 +117,8 @@ module.exports = function(RED) {
 
         node.on('input', function (msg) {
             const data = msg.payload;
+
+
             if (data) {
                 if (data.connect == true) {
                     console.log("Requesting manual reconnection")
@@ -123,6 +130,22 @@ module.exports = function(RED) {
                         // conn.end()
                     }
                     // retryTimeout = minTimeout
+
+
+                } else if (data.host && data.host !== ssh_config.host) {
+                    console.log("Host Change from: " + ssh_config.host + " to: " + data.host);
+                    ssh_config.host     = data.host;
+                    if (data.username       && ssh_config.username != data.username) 
+                        ssh_config.username  = data.username;
+                    if (data.password       && ssh_config.password != data.password)
+                        ssh_config.password  = data.password;
+                    if (data.port           && ssh_config.port     != data.port)
+                        ssh_config.port      = data.port;
+
+                    clearTimeout(retryTimeoutID)
+                    retryTimeout = minTimeout;
+                    retryTimeoutID = setTimeout( connect, retryTimeout, conn, ssh_config);        
+
                 } else {
                     try {
                         if (node.stream.writable) {
@@ -136,6 +159,7 @@ module.exports = function(RED) {
                     }
                 }
             }
+            
         });
 
         node.on('close', function (done) {
