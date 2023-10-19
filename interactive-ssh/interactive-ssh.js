@@ -134,19 +134,24 @@ module.exports = function(RED) {
                     // retryTimeout = minTimeout
 
 
-                } else if (data.host && data.host !== ssh_config.host) {
-                    console.log("Host Change from: " + ssh_config.host + " to: " + data.host);
-                    ssh_config.host     = data.host;
-                    if (data.username       && ssh_config.username != data.username) 
-                        ssh_config.username  = data.username;
-                    if (data.password       && ssh_config.password != data.password)
-                        ssh_config.password  = data.password;
-                    if (data.port           && ssh_config.port     != data.port)
-                        ssh_config.port      = data.port;
-
-                    clearTimeout(retryTimeoutID)
-                    retryTimeout = minTimeout;
-                    retryTimeoutID = setTimeout( connect, retryTimeout, conn, ssh_config);        
+                } else if (data.host ) {
+			if (data.host !== ssh_config.host) {
+				console.log("Host Change from: " + ssh_config.host + " to: " + data.host);
+				
+				ssh_config.host     = data.host;
+				if (data.username) 
+					ssh_config.username  = data.username;
+				if (data.password)
+					ssh_config.password  = data.password;
+				if (data.port)
+					ssh_config.port      = data.port;
+				if (data.debug) 
+					debug = data.debug;
+				
+				clearTimeout(retryTimeoutID)
+				retryTimeout = minTimeout;
+				retryTimeoutID = setTimeout( connect, retryTimeout, conn, ssh_config);        
+			}
 
                 } else {
                     try {
