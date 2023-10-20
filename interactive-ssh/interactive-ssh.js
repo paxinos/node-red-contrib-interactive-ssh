@@ -56,11 +56,11 @@ module.exports = function(RED) {
                 if (err) { 
                     node.error("ERRSHELL", {errMsg: err});
                     conn.end();
-                    node.send({ host: ssh_config.host, status: 'error disconnect' });
+                    node.send({ host: ssh_config.host, status: 'error disconnect', last: ssh_config.last, save: ssh_config.save });
                 }
 
                 if (debug) console.log('Shell opened');
-                node.send({ host: ssh_config.host, status: 'connected' });
+                node.send({ host: ssh_config.host, status: 'connected', last: ssh_config.last, save: ssh_config.save });
 
                 node.stream = stream
 
