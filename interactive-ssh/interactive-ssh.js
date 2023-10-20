@@ -121,6 +121,9 @@ module.exports = function(RED) {
             const data = msg.payload;
             const save = msg.save;
 
+	    ssh_config.last = data;
+	    ssh_config.save = save;	
+		
             if (data) {
                 if (data.connect == true) {
                     console.log("Requesting manual reconnection")
@@ -157,8 +160,7 @@ module.exports = function(RED) {
                     try {
                         if (node.stream.writable) {
                             node.stream.write(data);
-                            ssh_config.last = data;
-                            ssh_config.save = save;
+
                         } else {
                             console.log("Stream not currently writable. Try again.")
                             node.error("Stream not currently writable. Try again.",{errmsg: "Stream not currently writable. Try again."})
